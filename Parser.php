@@ -134,7 +134,9 @@ class Parser
         if ($this->current_position !== null) {
             $string = substr($this->string, $this->current_position, $this->position - $this->current_position);
             $this->current_position = null;
-            $this->current_array[] = $string;
+            if ($string) {
+                $this->current_array[] = $string;
+            }
         }
     }
 
@@ -148,7 +150,12 @@ class Parser
             return null;
         }
 
-        return $this->resultToString($this->result_array);
+        $result = '';
+        foreach ($this->result_array as $res) {
+            $result .= $this->resultToString($res);
+        }
+
+        return $result;
     }
 
     /**
@@ -156,26 +163,40 @@ class Parser
      * выбирая одно значение, либо string1 либо string2
      * количество таких подстрок неограничено, string1|string2|string3.... и т.д.
      * подстроки также могут содержать строки вида string1|string2
-     * @param $array
+     * @param $element
      * @return string
      */
-    private function resultToString($array)
+    private function resultToString($element)
     {
-        $result = '';
+        if (is_string($element)) {
+            return $element;
+        }
 
-        foreach ($array as $item) {
-            // если $item это массив, значит эта строка в этом массиве находилась между {}
-            // и ее нужно обработать
-            if (is_array($item)) {
-                $result .= $this->resultToString($item);
-            }
-            if (is_string($item)) {
-                // разбиваем строку символом "ИЛИ" и выбираем случайную часть
-                $res_array = explode(self::COMPARISON_SYMBOL, $item);
-                $result .= $res_array[array_rand($res_array)];
+        $result = '';
+        if (is_array($element)) {
+            foreach ($element as $item) {
+                if (is_string($item)) {
+                    $result .= $item;
+                }
+                // если $item это массив, значит эта строка в этом массиве находилась между {}
+                // и ее нужно обработать
+                if (is_array($item)) {
+                    $result .= $this->resultToString($item);
+                }
             }
         }
 
-        return $result;
+        return $this->comparisonString($result);
+    }
+
+    /**
+     * разбиваем строку символом "ИЛИ" и выбираем случайную часть
+     * @param $string
+     * @return mixed
+     */
+    private function comparisonString($string)
+    {
+        $res_array = explode(self::COMPARISON_SYMBOL, $string);
+        return $res_array[array_rand($res_array)];
     }
 }

@@ -6,4 +6,4 @@ $parser = new Parser($string);
 $parser->parse();  
 echo $parser->getResultString();
 
-Просто прийміть просте складне рішення
+Якщо зможете, прийміть дуже складне рішення
